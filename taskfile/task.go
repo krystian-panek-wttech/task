@@ -19,6 +19,7 @@ type Task struct {
 	Summary              string
 	Aliases              []string
 	Sources              []string
+	SourcesIgnored       []string
 	Generates            []string
 	Status               []string
 	Preconditions        []*Precondition
@@ -82,6 +83,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 			Summary       string
 			Aliases       []string
 			Sources       []string
+			SourceIgnored []string
 			Generates     []string
 			Status        []string
 			Preconditions []*Precondition
@@ -157,6 +159,7 @@ func (t *Task) DeepCopy() *Task {
 		Summary:              t.Summary,
 		Aliases:              deepcopy.Slice(t.Aliases),
 		Sources:              deepcopy.Slice(t.Sources),
+		SourcesIgnored:       deepcopy.Slice(t.SourcesIgnored),
 		Generates:            deepcopy.Slice(t.Generates),
 		Status:               deepcopy.Slice(t.Status),
 		Preconditions:        deepcopy.Slice(t.Preconditions),

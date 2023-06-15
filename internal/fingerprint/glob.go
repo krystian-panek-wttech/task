@@ -4,16 +4,15 @@ import (
 	"os"
 	"sort"
 
-	"github.com/mattn/go-zglob"
-
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/internal/fingerprint/zglob"
 )
 
-func globs(dir string, globs []string) ([]string, error) {
+func globs(dir string, globs []string, ignoredGlobs []string) ([]string, error) {
 	files := make([]string, 0)
 	for _, g := range globs {
-		f, err := Glob(dir, g)
+		f, err := Glob(dir, g, ignoredGlobs)
 		if err != nil {
 			continue
 		}
@@ -23,16 +22,16 @@ func globs(dir string, globs []string) ([]string, error) {
 	return files, nil
 }
 
-func Glob(dir string, g string) ([]string, error) {
+func Glob(dir string, glob string, ignoredGlobs []string) ([]string, error) {
 	files := make([]string, 0)
-	g = filepathext.SmartJoin(dir, g)
+	glob = filepathext.SmartJoin(dir, glob)
 
-	g, err := execext.Expand(g)
+	glob, err := execext.Expand(glob)
 	if err != nil {
 		return nil, err
 	}
 
-	fs, err := zglob.GlobFollowSymlinks(g)
+	fs, err := zglob.GlobFollowSymlinks(glob, ignoredGlobs)
 	if err != nil {
 		return nil, err
 	}

@@ -50,6 +50,7 @@ func (e *Executor) compiledTask(call taskfile.Call, evaluateShVars bool) (*taskf
 		Summary:              r.Replace(origTask.Summary),
 		Aliases:              origTask.Aliases,
 		Sources:              r.ReplaceSlice(origTask.Sources),
+		SourcesIgnored:       r.ReplaceSlice(origTask.SourcesIgnored),
 		Generates:            r.ReplaceSlice(origTask.Generates),
 		Dir:                  r.Replace(origTask.Dir),
 		Set:                  origTask.Set,

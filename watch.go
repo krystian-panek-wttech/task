@@ -143,7 +143,7 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 
 		for _, s := range task.Sources {
-			files, err := fingerprint.Glob(task.Dir, s)
+			files, err := fingerprint.Glob(task.Dir, s, task.SourcesIgnored)
 			if err != nil {
 				return fmt.Errorf("task: %s: %w", s, err)
 			}
