@@ -192,25 +192,36 @@ func GlobFollowSymlinks(pattern string, ignoredPatterns []string) ([]string, err
 }
 
 func glob(pattern string, ignoredPatterns []string, followSymlinks bool) ([]string, error) {
-	zenv, err := New(pattern)
+	zenvP, err := New(pattern)
 	if err != nil {
 		return nil, err
 	}
-	if zenv.root == "" {
+	if zenvP.root == "" {
 		_, err := os.Stat(pattern)
 		if err != nil {
 			return nil, os.ErrNotExist
 		}
 		return []string{pattern}, nil
 	}
+	var zenvIPs []*zenv
+	for _, ignoredPattern := range ignoredPatterns {
+		zenvIP, err := New(ignoredPattern)
+		if err != nil {
+			return nil, err
+		}
+		zenvIPs = append(zenvIPs, zenvIP)
+	}
+
 	relative := !filepath.IsAbs(pattern)
 	matches := []string{}
 
-	err = fastwalk.FastWalk(zenv.root, func(path string, info os.FileMode) error {
-		if zenv.root == "." && len(zenv.root) < len(path) {
-			path = path[len(zenv.root)+1:]
+	err = fastwalk.FastWalk(zenvP.root, func(path string, info os.FileMode) error {
+		if zenvP.root == "." && len(zenvP.root) < len(path) {
+			path = path[len(zenvP.root)+1:]
 		}
 		path = filepath.ToSlash(path)
+
+		println(path) // TODO should not traverse glob excluded if detected
 
 		if followSymlinks && info == os.ModeSymlink {
 			followedPath, err := filepath.EvalSymlinks(path)
@@ -223,27 +234,32 @@ func glob(pattern string, ignoredPatterns []string, followSymlinks bool) ([]stri
 		}
 
 		if info.IsDir() {
-			if path == "." || len(path) <= len(zenv.root) {
+			if path == "." || len(path) <= len(zenvP.root) {
 				return nil
 			}
-			if zenv.fre.MatchString(path) {
+			if globIgnored(path, zenvIPs) {
+				return filepath.SkipDir
+			}
+			if zenvP.fre.MatchString(path) {
 				mu.Lock()
 				matches = append(matches, path)
 				mu.Unlock()
 				return nil
 			}
-			if len(path) < len(zenv.dirmask) && !strings.HasPrefix(zenv.dirmask, path+"/") {
+			if len(path) < len(zenvP.dirmask) && !strings.HasPrefix(zenvP.dirmask, path+"/") {
 				return filepath.SkipDir
 			}
 		}
 
-		if zenv.fre.MatchString(path) {
-			if relative && filepath.IsAbs(path) {
-				path = path[len(zenv.root)+1:]
+		if zenvP.fre.MatchString(path) {
+			if !globIgnored(path, zenvIPs) {
+				if relative && filepath.IsAbs(path) {
+					path = path[len(zenvP.root)+1:]
+				}
+				mu.Lock()
+				matches = append(matches, path)
+				mu.Unlock()
 			}
-			mu.Lock()
-			matches = append(matches, path)
-			mu.Unlock()
 		}
 		return nil
 	})
@@ -253,6 +269,19 @@ func glob(pattern string, ignoredPatterns []string, followSymlinks bool) ([]stri
 	}
 
 	return matches, nil
+}
+
+func globIgnored(path string, zenvIPs []*zenv) bool {
+	for _, zenvIP := range zenvIPs {
+		if zenvIP.fre != nil && zenvIP.fre.MatchString(path) {
+			return true
+		}
+		absPath, _ := filepath.Abs(zenvIP.pattern)
+		if absPath == path || strings.HasPrefix(absPath, path+string(os.PathSeparator)) {
+			return true
+		}
+	}
+	return false
 }
 
 func Match(pattern, name string) (matched bool, err error) {

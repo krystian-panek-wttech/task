@@ -19,7 +19,7 @@ type Task struct {
 	Summary              string
 	Aliases              []string
 	Sources              []string
-	SourcesIgnored       []string
+	SourcesIgnored       []string `yaml:"sources_ignored"`
 	Generates            []string
 	Status               []string
 	Preconditions        []*Precondition
@@ -74,33 +74,33 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 	// Full task object
 	case yaml.MappingNode:
 		var task struct {
-			Cmds          []*Cmd
-			Cmd           *Cmd
-			Deps          []*Dep
-			Label         string
-			Desc          string
-			Prompt        string
-			Summary       string
-			Aliases       []string
-			Sources       []string
-			SourceIgnored []string
-			Generates     []string
-			Status        []string
-			Preconditions []*Precondition
-			Dir           string
-			Set           []string
-			Shopt         []string
-			Vars          *Vars
-			Env           *Vars
-			Dotenv        []string
-			Silent        bool
-			Interactive   bool
-			Internal      bool
-			Method        string
-			Prefix        string
-			IgnoreError   bool `yaml:"ignore_error"`
-			Run           string
-			Platforms     []*Platform
+			Cmds           []*Cmd
+			Cmd            *Cmd
+			Deps           []*Dep
+			Label          string
+			Desc           string
+			Prompt         string
+			Summary        string
+			Aliases        []string
+			Sources        []string
+			SourcesIgnored []string `yaml:"sources_ignored"`
+			Generates      []string
+			Status         []string
+			Preconditions  []*Precondition
+			Dir            string
+			Set            []string
+			Shopt          []string
+			Vars           *Vars
+			Env            *Vars
+			Dotenv         []string
+			Silent         bool
+			Interactive    bool
+			Internal       bool
+			Method         string
+			Prefix         string
+			IgnoreError    bool `yaml:"ignore_error"`
+			Run            string
+			Platforms      []*Platform
 		}
 		if err := node.Decode(&task); err != nil {
 			return err
@@ -120,6 +120,7 @@ func (t *Task) UnmarshalYAML(node *yaml.Node) error {
 		t.Summary = task.Summary
 		t.Aliases = task.Aliases
 		t.Sources = task.Sources
+		t.SourcesIgnored = task.SourcesIgnored
 		t.Generates = task.Generates
 		t.Status = task.Status
 		t.Preconditions = task.Preconditions
