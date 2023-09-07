@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Prep work for remote Taskfiles (#1316 by @pd93).
+- Added negative glob support (#225, #1324 by @pd93).
 
 ## v3.29.1 - 2023-08-26
 
