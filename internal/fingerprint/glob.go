@@ -3,6 +3,7 @@ package fingerprint
 import (
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/mattn/go-zglob"
 
@@ -11,13 +12,23 @@ import (
 )
 
 func Globs(dir string, globs []string) ([]string, error) {
-	files := make([]string, 0)
+	fileMap := make(map[string]bool)
 	for _, g := range globs {
-		f, err := Glob(dir, g)
+		var negate bool
+		g, negate = strings.CutPrefix(g, "!")
+		matches, err := Glob(dir, g)
 		if err != nil {
 			continue
 		}
-		files = append(files, f...)
+		for _, match := range matches {
+			fileMap[match] = !negate
+		}
+	}
+	files := make([]string, 0)
+	for file, includePath := range fileMap {
+		if includePath {
+			files = append(files, file)
+		}
 	}
 	sort.Strings(files)
 	return files, nil
