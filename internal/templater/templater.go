@@ -106,6 +106,22 @@ func (r *Templater) replaceVars(vars *taskfile.Vars, extra map[string]any) *task
 	return &new
 }
 
+func (r *Templater) ReplaceGlobs(globs []*taskfile.Glob) []*taskfile.Glob {
+	if r.err != nil || len(globs) == 0 {
+		return nil
+	}
+
+	var new []*taskfile.Glob
+	for _, g := range globs {
+		new = append(new, &taskfile.Glob{
+			Pattern: r.Replace(g.Pattern),
+			Negate:  g.Negate,
+		})
+	}
+
+	return new
+}
+
 func (r *Templater) Err() error {
 	return r.err
 }
