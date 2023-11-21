@@ -143,25 +143,27 @@ func (e *Executor) registerWatchedFiles(w *watcher.Watcher, calls ...taskfile.Ca
 		}
 
 		for _, s := range task.Sources {
-			files, err := fingerprint.Glob(task.Dir, s)
-			if err != nil {
-				return fmt.Errorf("task: %s: %w", s, err)
-			}
-			for _, f := range files {
-				absFile, err := filepath.Abs(f)
+			if !s.Negate {
+				files, err := fingerprint.Glob(task.Dir, s.Pattern)
 				if err != nil {
-					return err
+					return fmt.Errorf("task: %s: %w", s.Pattern, err)
 				}
-				if shouldIgnoreFile(absFile) {
-					continue
+				for _, f := range files {
+					absFile, err := filepath.Abs(f)
+					if err != nil {
+						return err
+					}
+					if shouldIgnoreFile(absFile) {
+						continue
+					}
+					if _, ok := watchedFiles[absFile]; ok {
+						continue
+					}
+					if err := w.Add(absFile); err != nil {
+						return err
+					}
+					e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v\n", absFile)
 				}
-				if _, ok := watchedFiles[absFile]; ok {
-					continue
-				}
-				if err := w.Add(absFile); err != nil {
-					return err
-				}
-				e.Logger.VerboseOutf(logger.Green, "task: watching new file: %v\n", absFile)
 			}
 		}
 		return nil

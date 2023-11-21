@@ -52,15 +52,17 @@ func (checker *ChecksumChecker) IsUpToDate(t *taskfile.Task) (bool, error) {
 	if len(t.Generates) > 0 {
 		// For each specified 'generates' field, check whether the files actually exist
 		for _, g := range t.Generates {
-			generates, err := Glob(t.Dir, g)
-			if os.IsNotExist(err) {
-				return false, nil
-			}
-			if err != nil {
-				return false, err
-			}
-			if len(generates) == 0 {
-				return false, nil
+			if !g.Negate {
+				generates, err := Glob(t.Dir, g.Pattern)
+				if os.IsNotExist(err) {
+					return false, nil
+				}
+				if err != nil {
+					return false, err
+				}
+				if len(generates) == 0 {
+					return false, nil
+				}
 			}
 		}
 	}

@@ -3,25 +3,23 @@ package fingerprint
 import (
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/mattn/go-zglob"
 
 	"github.com/go-task/task/v3/internal/execext"
 	"github.com/go-task/task/v3/internal/filepathext"
+	"github.com/go-task/task/v3/taskfile"
 )
 
-func Globs(dir string, globs []string) ([]string, error) {
+func Globs(dir string, globs []*taskfile.Glob) ([]string, error) {
 	fileMap := make(map[string]bool)
 	for _, g := range globs {
-		var negate bool
-		g, negate = strings.CutPrefix(g, "!")
-		matches, err := Glob(dir, g)
+		matches, err := Glob(dir, g.Pattern)
 		if err != nil {
 			continue
 		}
 		for _, match := range matches {
-			fileMap[match] = !negate
+			fileMap[match] = !g.Negate
 		}
 	}
 	files := make([]string, 0)
